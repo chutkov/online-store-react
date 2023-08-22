@@ -1,46 +1,93 @@
 import './App.scss';
-import {Routes, Route, Link} from "react-router-dom";
+import {Routes, Route} from "react-router-dom";
 import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
 import Cart from "./pages/Cart";
+import axios from "axios";
+import React from "react";
+import AppContext from './context';
+import Header from "./components/Header";
+
 function App() {
+    const [products, setProducts] = React.useState([])
+    const [productsInCart, setProductsInCart] = React.useState([])
+    const [productsInFavorites, setProductsInFavorites] = React.useState([])
+    const [searchValue, setSearchValue] = React.useState('');
+    React.useEffect(() =>{
+            axios.get('https://64dfcdd171c3335b25831443.mockapi.io/products').then((res) =>{
+                setProducts(res.data)
+            });
+        axios.get('https://64dfcdd171c3335b25831443.mockapi.io/cart').then((res) =>{
+            setProductsInCart(res.data)
+        });
+    },[])
+    const [isAddedToCart,setAddToCart] = React.useState(true)
+
+    const clickAddToCart = async (obj) => {
+        try {
+            const findItem = productsInCart.find((item) => Number(item.parentId) === Number(obj.parentId));
+            if (findItem) {
+                const {data} = await axios.get('https://64dfcdd171c3335b25831443.mockapi.io/cart')
+                setProductsInCart((prev) => prev.filter((item) => Number(item.parentId) !== Number(obj.parentId)));
+                await data.map( async (item) => {
+                    item.parentId === obj.parentId && await axios.delete(`https://64dfcdd171c3335b25831443.mockapi.io/cart/${item.id}`);
+                })
+            } else {
+                await axios.post('https://64dfcdd171c3335b25831443.mockapi.io/cart', obj)
+                setProductsInCart((prev) => [...prev, obj]);
+            }
+        } catch (error) {
+            alert('Ошибка при добавлении в избранное');
+            console.error(error);
+        }
+    }
+    const clickAddToFavorites = async (obj) => {
+        try {
+            const findItem = productsInFavorites.find((item) => Number(item.parentId) === Number(obj.id));
+            if (findItem) {
+                setProductsInFavorites((prev) => prev.filter((item) => Number(item.parentId) !== Number(obj.id)));
+                // await axios.delete(`https://64dfcdd171c3335b25831443.mockapi.io/cart/${findItem.id}`);
+            } else {
+                setProductsInFavorites((prev) => [...prev, obj]);
+            }
+        } catch (error) {
+            alert('Ошибка при добавлении в избранное');
+            console.error(error);
+        }
+    }
+    const isItemAddedToCart = (id) => {
+        return productsInCart.some((obj) => Number(obj.parentId) === Number(id));
+    };
+    const isItemAddedToFavorites = (id) => {
+        return productsInFavorites.some((obj) => Number(obj.parentId) === Number(id));
+    };
+    const onChangeSearchInput = (event) => {
+        setSearchValue(event.target.value);
+    };
   return (
+      <AppContext.Provider
+          value={{
+              isItemAddedToCart,
+              isItemAddedToFavorites,
+          }}>
       <div className="App clear">
-        <header>
-            <Link to={"/"}>
-                <div className="headerLeft">
-                    <img src="/img/2.png" width={40} height={40} alt="Логотип"/>
-                    <div className="headerTitle">
-                        <h2>Онлайн-магазин</h2>
-                        <p>Найдётся и для тебя</p>
-                    </div>
-                </div>
-            </Link>
-            <div className="headerRight">
-                <ul>
-                    <Link to={'/cart'}>
-                        <li>
-                            <img height={20} src="/img/cart.svg" alt="Корзина"/>
-                            <span>0 руб.</span>
-                        </li>
-                    </Link>
-                    <Link to={'/favorites'}>
-                        <li>
-                            <img height={20} src="/img/heart.svg" alt="Избранное"/>
-                        </li>
-                    </Link>
-                </ul>
-            </div>
-        </header>
+        <Header productsInCart={productsInCart}/>
           <Routes>
-              <Route path="/" element={<Home/>}></Route>
-              <Route path="/favorites" element={<Favorites
-                  items={[{title: "Мужские Сухарики"}]}
-                  />
-              }></Route>
-              <Route path="/cart" element={<Cart/>}></Route>
+              <Route path="/" element={
+                  <Home
+                      products={products}
+                      isAddedToCart={isAddedToCart}
+                      clickAddToCart={clickAddToCart}
+                      productsInFavorites={productsInFavorites}
+                      clickAddToFavorites={clickAddToFavorites}
+                      searchValue={searchValue}
+                      setSearchValue={setSearchValue}
+                      onChangeSearchInput={onChangeSearchInput}
+                  />}></Route>
+              <Route path="/favorites" element={<Favorites productsInFavorites={productsInFavorites} clickAddToFavorites={clickAddToFavorites} clickAddToCart={clickAddToCart}/>}></Route>
+              <Route path="/cart" element={<Cart productsInCart={productsInCart} clickAddToCart={clickAddToCart} clickAddToFavorites={clickAddToFavorites}/>}></Route>
           </Routes>
-      </div>
+      </div></AppContext.Provider>
   );
 }
 

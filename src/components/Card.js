@@ -1,6 +1,6 @@
 import AppContext from '../context';
 import React from "react";
-function Card({clickAddToCart,isAddedToCart = true,clickAddToFavorites,isAddedToFavorites = true, title, price, img,id}){
+function Card({clickAddToCart,clickAddToFavorites, title, price, img,id}){
     const { isItemAddedToFavorites, isItemAddedToCart } = React.useContext(AppContext);
     const obj = { id, parentId: id, title, img, price };
     const onClickAddToCart = () => {

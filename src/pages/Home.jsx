@@ -1,6 +1,6 @@
 import React from "react";
 import Card from '../components/Card';
-function Home({products,isAddedToCart, clickAddToCart, isAddedToFavorites,clickAddToFavorites,searchValue,setSearchValue, onChangeSearchInput}){
+function Home({products,isAddedToCart, clickAddToCart, isAddedToFavorites,clickAddToFavorites,searchValue, onChangeSearchInput}){
     const filtredItems = products.filter((item) =>
         item.title.toLowerCase().includes(searchValue.toLowerCase()),
     );

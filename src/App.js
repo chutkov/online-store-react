@@ -21,7 +21,6 @@ function App() {
             setProductsInCart(res.data)
         });
     },[])
-    const [isAddedToCart,setAddToCart] = React.useState(true)
 
     const clickAddToCart = async (obj) => {
         try {
@@ -76,7 +75,6 @@ function App() {
               <Route path="/" element={
                   <Home
                       products={products}
-                      isAddedToCart={isAddedToCart}
                       clickAddToCart={clickAddToCart}
                       productsInFavorites={productsInFavorites}
                       clickAddToFavorites={clickAddToFavorites}
